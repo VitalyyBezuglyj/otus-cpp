@@ -4,37 +4,40 @@ on:
   push:
     branches:
       - master
-      - feature/github_actions
+      - '**' 
 
 jobs:
-  build:
+  release:
+    if: github.ref == 'refs/heads/master' # Only run on master branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_BOOST_TEST=ON
+      - run: sudo apt-get update && sudo apt-get install libboost-test-dev ninja-build libgtest-dev -y
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -G Ninja
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "*.deb"
+          makeLatest: true
+
+  # Non-master build scenario without packaging and release
+  build-and-test:
+    if: github.ref != 'refs/heads/master' # Run on non-master branches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install libboost-test-dev ninja-build libgtest-dev -y
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_BOOST_TEST=ON -G Ninja
+      - run: cmake --build .
+      - run: cmake --build . --target test

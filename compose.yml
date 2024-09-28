@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  cpp-dev:
+    build:
+      context: .
+      args:
+        UID: "${UID:-1000}"  # Pass in the current user's UID
+        GID: "${GID:-1000}"  # Pass in the current user's GID
+    container_name: cpp-dev-container
+    volumes:
+      - .:/usr/src/app:rw  # Sync your project folder with the container
+    working_dir: /usr/src/app
+    tty: true  # This keeps the container running so you can attach to it
+    stdin_open: true  # Allow interactive mode
+    environment:
+      - CMAKE_BUILD_TYPE=Debug
+    entrypoint: /bin/bash
