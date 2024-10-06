@@ -7,6 +7,7 @@ services:
         UID: "${UID:-1000}"  # Pass in the current user's UID
         GID: "${GID:-1000}"  # Pass in the current user's GID
     container_name: cpp-dev-container
+    user: developer:developer
     volumes:
       - .:/usr/src/app:rw  # Sync your project folder with the container
     working_dir: /usr/src/app

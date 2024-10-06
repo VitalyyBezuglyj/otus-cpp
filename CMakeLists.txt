@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+FetchContent_MakeAvailable(fmt)
+
+
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 
@@ -41,6 +50,7 @@ target_include_directories(helloworld
 
 target_link_libraries(helloworld_cli PRIVATE
     helloworld
+    fmt::fmt
 )
 
 if(WITH_GTEST)
@@ -55,7 +65,7 @@ if(WITH_GTEST)
         CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(gtest_version helloworld ${GTEST_LIBRARIES} pthread)
+    target_link_libraries(gtest_version helloworld ${GTEST_LIBRARIES} pthread fmt::fmt)
 
 endif()
 
