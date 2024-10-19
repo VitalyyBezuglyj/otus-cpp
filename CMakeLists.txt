@@ -34,38 +34,40 @@ project(ipfilter VERSION ${PROJECT_VERSION})
 option(WITH_GTEST "Whether to build Google test" ON)
 message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
-configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/lib/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
 
-add_executable(ipfilter_cli main.cpp)
-add_library(ipfilter lib.cpp)
+add_executable(ipfilter_cli main.cpp ipfilter/ipfilter.cpp)
+add_library(versionlib lib/lib.cpp)
 
-set_target_properties(ipfilter_cli ipfilter PROPERTIES
+set_target_properties(ipfilter_cli versionlib PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(ipfilter
-    PRIVATE "${CMAKE_BINARY_DIR}"
+target_include_directories(versionlib
+    PRIVATE 
+    "${CMAKE_SOURCE_DIR}"
+    "${CMAKE_BINARY_DIR}"
 )
 
 target_link_libraries(ipfilter_cli PRIVATE
-    ipfilter
     fmt::fmt
 )
 
 if(WITH_GTEST)
     find_package(GTest REQUIRED)
 
-    include_directories(${GTEST_INCLUDE_DIRS})
+    
+    add_executable(gtest_version tests/gtest_version.cpp)
 
-    add_executable(gtest_version gtest_version.cpp)
+    target_include_directories(gtest_version PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
 
     set_target_properties(gtest_version PROPERTIES
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(gtest_version ipfilter ${GTEST_LIBRARIES} pthread fmt::fmt)
+    target_link_libraries(gtest_version PRIVATE versionlib ${GTEST_LIBRARIES} pthread fmt::fmt)
 
 endif()
 
@@ -73,7 +75,7 @@ if (MSVC)
     target_compile_options(ipfilter_cli PRIVATE
         /W4
     )
-    target_compile_options(ipfilter PRIVATE
+    target_compile_options(versionlib PRIVATE
         /W4
     )
     if(WITH_GTEST)
@@ -85,7 +87,7 @@ else ()
     target_compile_options(ipfilter_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(ipfilter PRIVATE
+    target_compile_options(versionlib PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_GTEST)
