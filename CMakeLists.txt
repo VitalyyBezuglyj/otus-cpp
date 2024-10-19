@@ -36,10 +36,11 @@ message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
 configure_file(${CMAKE_SOURCE_DIR}/lib/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
 
-add_executable(ipfilter_cli main.cpp ipfilter/ipfilter.cpp)
+add_library(ipfilterlib ipfilter/ipfilter.cpp)
 add_library(versionlib lib/lib.cpp)
+add_executable(ipfilter_cli main.cpp)
 
-set_target_properties(ipfilter_cli versionlib PROPERTIES
+set_target_properties(ipfilter_cli ipfilterlib versionlib PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -50,14 +51,19 @@ target_include_directories(versionlib
     "${CMAKE_BINARY_DIR}"
 )
 
+target_link_libraries(ipfilterlib PRIVATE fmt::fmt)
+
+target_include_directories(ipfilter_cli PRIVATE "${CMAKE_SOURCE_DIR}")
+
 target_link_libraries(ipfilter_cli PRIVATE
+    ipfilterlib
     fmt::fmt
 )
 
 if(WITH_GTEST)
     find_package(GTest REQUIRED)
 
-    
+    # test version
     add_executable(gtest_version tests/gtest_version.cpp)
 
     target_include_directories(gtest_version PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
@@ -67,7 +73,19 @@ if(WITH_GTEST)
         CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(gtest_version PRIVATE versionlib ${GTEST_LIBRARIES} pthread fmt::fmt)
+    target_link_libraries(gtest_version PRIVATE versionlib ${GTEST_LIBRARIES} pthread)
+
+    # test ipfilter
+    add_executable(gtest_ipfilter tests/gtest_ipfilter.cpp)
+
+    target_include_directories(gtest_ipfilter PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
+
+    set_target_properties(gtest_ipfilter PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    target_link_libraries(gtest_ipfilter PRIVATE ipfilterlib ${GTEST_LIBRARIES} gtest_main pthread ssl crypto fmt::fmt)
 
 endif()
 
@@ -75,11 +93,20 @@ if (MSVC)
     target_compile_options(ipfilter_cli PRIVATE
         /W4
     )
+
+    target_compile_options(ipfilterlib PRIVATE
+        /W4)
+
     target_compile_options(versionlib PRIVATE
         /W4
     )
+
     if(WITH_GTEST)
         target_compile_options(gtest_version PRIVATE
+            /W4
+        )
+
+        target_compile_options(gtest_ipfilter PRIVATE
             /W4
         )
     endif()
@@ -87,11 +114,20 @@ else ()
     target_compile_options(ipfilter_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
+
+    target_compile_options(ipfilterlib PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
+
     target_compile_options(versionlib PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_GTEST)
         target_compile_options(gtest_version PRIVATE
+            -Wall -Wextra -pedantic -Werror
+        )
+
+        target_compile_options(gtest_ipfilter PRIVATE
             -Wall -Wextra -pedantic -Werror
         )
     endif()
