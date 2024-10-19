@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-const std::string TEST_DATA_PATH = "tests/data/ip_filter.tsv";
+const std::string TEST_DATA_PATH = TEST_FILE_PATH;  // pre-compile definition
 const std::string SOLUTION_HASH_STR =
     "9c14006ec1c4b0210308e5da2a24a71ea0ff09c87f96dba122b16e47becccdcf";
 

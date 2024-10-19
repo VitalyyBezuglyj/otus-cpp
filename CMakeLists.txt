@@ -62,6 +62,7 @@ target_link_libraries(ipfilter_cli PRIVATE
 
 if(WITH_GTEST)
     find_package(GTest REQUIRED)
+    add_compile_definitions(TEST_FILE_PATH="${CMAKE_BINARY_DIR}/tests/data/ip_filter.tsv")
 
     # test version
     add_executable(gtest_version tests/gtest_version.cpp)
@@ -181,6 +182,8 @@ endif()
 include(CPack)
 
 if(WITH_GTEST)
+    file(COPY ${CMAKE_SOURCE_DIR}/tests/data DESTINATION ${CMAKE_BINARY_DIR}/tests)
+
     enable_testing()
     add_test(gtest_version gtest_version)
     add_test(gtest_ipfilter gtest_ipfilter)
