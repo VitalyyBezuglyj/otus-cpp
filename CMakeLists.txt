@@ -41,7 +41,7 @@ add_library(versionlib lib/lib.cpp)
 add_executable(ipfilter_cli main.cpp)
 
 set_target_properties(ipfilter_cli ipfilterlib versionlib PROPERTIES
-    CXX_STANDARD 14
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
@@ -69,7 +69,7 @@ if(WITH_GTEST)
     target_include_directories(gtest_version PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
 
     set_target_properties(gtest_version PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
     )
 
@@ -81,7 +81,7 @@ if(WITH_GTEST)
     target_include_directories(gtest_ipfilter PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
 
     set_target_properties(gtest_ipfilter PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
     )
 
