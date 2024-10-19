@@ -29,27 +29,27 @@ set(PROJECT_VERSION "${PROJECT_VERSION}")
 message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
 
-project(helloworld VERSION ${PROJECT_VERSION})
+project(ipfilter VERSION ${PROJECT_VERSION})
 
 option(WITH_GTEST "Whether to build Google test" ON)
 message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
 configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
 
-add_executable(helloworld_cli main.cpp)
-add_library(helloworld lib.cpp)
+add_executable(ipfilter_cli main.cpp)
+add_library(ipfilter lib.cpp)
 
-set_target_properties(helloworld_cli helloworld PROPERTIES
+set_target_properties(ipfilter_cli ipfilter PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(helloworld
+target_include_directories(ipfilter
     PRIVATE "${CMAKE_BINARY_DIR}"
 )
 
-target_link_libraries(helloworld_cli PRIVATE
-    helloworld
+target_link_libraries(ipfilter_cli PRIVATE
+    ipfilter
     fmt::fmt
 )
 
@@ -65,15 +65,15 @@ if(WITH_GTEST)
         CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(gtest_version helloworld ${GTEST_LIBRARIES} pthread fmt::fmt)
+    target_link_libraries(gtest_version ipfilter ${GTEST_LIBRARIES} pthread fmt::fmt)
 
 endif()
 
 if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ipfilter_cli PRIVATE
         /W4
     )
-    target_compile_options(helloworld PRIVATE
+    target_compile_options(ipfilter PRIVATE
         /W4
     )
     if(WITH_GTEST)
@@ -82,10 +82,10 @@ if (MSVC)
         )
     endif()
 else ()
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ipfilter_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(helloworld PRIVATE
+    target_compile_options(ipfilter PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_GTEST)
@@ -95,7 +95,7 @@ else ()
     endif()
 endif()
 
-install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS ipfilter_cli RUNTIME DESTINATION bin)
 
 # Define a CMake option for package type
 set(CPACK_SUPPORTED_GENERATORS "DEB" "RPM" "WIN" "ZIP")
@@ -127,8 +127,8 @@ set(CPACK_PACKAGE_CONTACT bevidm@yandex.ru)
 
 # Windows-specific CPack configurations
 if(WIN32)
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "OtusHelloWorld")
-    set(CPACK_NSIS_DISPLAY_NAME "OtusHelloWorld")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "Otus-ipfilter")
+    set(CPACK_NSIS_DISPLAY_NAME "Otus-ipfilter")
     set(CPACK_NSIS_CONTACT "bevidm@yandex.ru")
     set(CPACK_NSIS_MODIFY_PATH ON)  # Option to modify system PATH
 endif()
