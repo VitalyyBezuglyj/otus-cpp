@@ -41,12 +41,10 @@ std::string calculateSHA3_256(const std::stringstream& ss) {
 }
 
 TEST(CheckFilter, FilterPassesGivenTestCase) {
-    auto test_data_path = fs::current_path() / TEST_DATA_PATH;
-    std::ifstream file(test_data_path.string());
+    std::ifstream file(TEST_DATA_PATH);
 
     if (!file) {
-        FAIL() << "Failed to open file: " << TEST_DATA_PATH
-               << "Current  path: " << fs::current_path();
+        FAIL() << "Failed to open file: " << TEST_DATA_PATH;
     }
 
     std::stringstream buffer_out;
