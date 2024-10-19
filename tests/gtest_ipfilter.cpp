@@ -3,11 +3,14 @@
 #include <openssl/sha.h>  // SHA-3 functions
 
 #include <algorithm>  // for std::transform
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
 
 #include "ipfilter/ipfilter.h"
+
+namespace fs = std::filesystem;
 
 const std::string TEST_DATA_PATH = "tests/data/ip_filter.tsv";
 const std::string SOLUTION_HASH_STR =
@@ -41,10 +44,11 @@ std::string calculateSHA3_256(const std::stringstream& ss) {
 }
 
 TEST(CheckFilter, FilterPassesGivenTestCase) {
-    std::ifstream file(TEST_DATA_PATH);
+    auto test_data_path = fs::current_path().parent_path() / TEST_DATA_PATH;
+    std::ifstream file(test_data_path.string());
 
     if (!file) {
-        FAIL() << "Failed to open file: " << TEST_DATA_PATH;
+        FAIL() << "Failed to open file: " << test_data_path;
     }
 
     std::stringstream buffer_out;
