@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+FetchContent_MakeAvailable(fmt)
+
+
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 
@@ -20,72 +29,112 @@ set(PROJECT_VERSION "${PROJECT_VERSION}")
 message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
 
-project(helloworld VERSION ${PROJECT_VERSION})
+project(ipfilter VERSION ${PROJECT_VERSION})
 
 option(WITH_GTEST "Whether to build Google test" ON)
 message(STATUS "PROJECT_VERSION_PATCH: ${PROJECT_VERSION_PATCH}")
 
-configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/lib/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
 
-add_executable(helloworld_cli main.cpp)
-add_library(helloworld lib.cpp)
+add_library(ipfilterlib ipfilter/ipfilter.cpp)
+add_library(versionlib lib/lib.cpp)
+add_executable(ipfilter_cli main.cpp)
 
-set_target_properties(helloworld_cli helloworld PROPERTIES
-    CXX_STANDARD 14
+set_target_properties(ipfilter_cli ipfilterlib versionlib PROPERTIES
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(helloworld
-    PRIVATE "${CMAKE_BINARY_DIR}"
+target_include_directories(versionlib
+    PRIVATE 
+    "${CMAKE_SOURCE_DIR}"
+    "${CMAKE_BINARY_DIR}"
 )
 
-target_link_libraries(helloworld_cli PRIVATE
-    helloworld
+target_link_libraries(ipfilterlib PRIVATE fmt::fmt)
+
+target_include_directories(ipfilter_cli PRIVATE "${CMAKE_SOURCE_DIR}")
+
+target_link_libraries(ipfilter_cli PRIVATE
+    ipfilterlib
+    fmt::fmt
 )
 
 if(WITH_GTEST)
     find_package(GTest REQUIRED)
+    add_compile_definitions(TEST_FILE_PATH="${CMAKE_BINARY_DIR}/tests/data/ip_filter.tsv")
 
-    include_directories(${GTEST_INCLUDE_DIRS})
+    # test version
+    add_executable(gtest_version tests/gtest_version.cpp)
 
-    add_executable(gtest_version gtest_version.cpp)
+    target_include_directories(gtest_version PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
 
     set_target_properties(gtest_version PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(gtest_version helloworld ${GTEST_LIBRARIES} pthread)
+    target_link_libraries(gtest_version PRIVATE versionlib ${GTEST_LIBRARIES} pthread)
+
+    # test ipfilter
+    add_executable(gtest_ipfilter tests/gtest_ipfilter.cpp)
+
+    target_include_directories(gtest_ipfilter PRIVATE "${CMAKE_SOURCE_DIR}" ${GTEST_INCLUDE_DIRS})
+
+    set_target_properties(gtest_ipfilter PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    target_link_libraries(gtest_ipfilter PRIVATE ipfilterlib ${GTEST_LIBRARIES} gtest_main pthread ssl crypto fmt::fmt)
 
 endif()
 
 if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ipfilter_cli PRIVATE
         /W4
     )
-    target_compile_options(helloworld PRIVATE
+
+    target_compile_options(ipfilterlib PRIVATE
+        /W4)
+
+    target_compile_options(versionlib PRIVATE
         /W4
     )
+
     if(WITH_GTEST)
         target_compile_options(gtest_version PRIVATE
             /W4
         )
+
+        target_compile_options(gtest_ipfilter PRIVATE
+            /W4
+        )
     endif()
 else ()
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ipfilter_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(helloworld PRIVATE
+
+    target_compile_options(ipfilterlib PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
+
+    target_compile_options(versionlib PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_GTEST)
         target_compile_options(gtest_version PRIVATE
             -Wall -Wextra -pedantic -Werror
         )
+
+        target_compile_options(gtest_ipfilter PRIVATE
+            -Wall -Wextra -pedantic -Werror
+        )
     endif()
 endif()
 
-install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS ipfilter_cli RUNTIME DESTINATION bin)
 
 # Define a CMake option for package type
 set(CPACK_SUPPORTED_GENERATORS "DEB" "RPM" "WIN" "ZIP")
@@ -117,8 +166,8 @@ set(CPACK_PACKAGE_CONTACT bevidm@yandex.ru)
 
 # Windows-specific CPack configurations
 if(WIN32)
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "OtusHelloWorld")
-    set(CPACK_NSIS_DISPLAY_NAME "OtusHelloWorld")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "Otus-ipfilter")
+    set(CPACK_NSIS_DISPLAY_NAME "Otus-ipfilter")
     set(CPACK_NSIS_CONTACT "bevidm@yandex.ru")
     set(CPACK_NSIS_MODIFY_PATH ON)  # Option to modify system PATH
 endif()
@@ -133,8 +182,11 @@ endif()
 include(CPack)
 
 if(WITH_GTEST)
+    file(COPY ${CMAKE_SOURCE_DIR}/tests/data DESTINATION ${CMAKE_BINARY_DIR}/tests)
+
     enable_testing()
     add_test(gtest_version gtest_version)
+    add_test(gtest_ipfilter gtest_ipfilter)
     include(GoogleTest)
     gtest_discover_tests(gtest_version)
 endif()

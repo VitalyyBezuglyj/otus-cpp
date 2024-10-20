@@ -52,8 +52,8 @@ RUN chown -R developer:developer /usr/src/app
 USER developer
 
 # Build the project using CMake
-RUN cmake -Bbuild -S. -G Ninja && \
-    cmake --build build
+# RUN cmake -Bbuild -S. -G Ninja && \
+#     cmake --build build
 
 # Set the default command to run when the container starts
 CMD ["/bin/bash"]

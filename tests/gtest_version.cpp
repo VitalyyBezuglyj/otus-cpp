@@ -1,11 +1,9 @@
 #include <gtest/gtest.h>
-#include "lib.h"
+
+#include "lib/lib.h"
 
 // Test case
-TEST(CheckVersion, VersionGTZero) {
-    EXPECT_GT(version(), 0);
-}
-
+TEST(CheckVersion, VersionGTZero) { EXPECT_GT(version(), 0); }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
